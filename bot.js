@@ -8,28 +8,13 @@ const osuReplayParser = require('osureplayparser');
 const osu = require('node-osu');
 
 let apiPrefix = "https://osu.ppy.sh/api/";
-let key = 'My_Api_Key';
+let key = '{myKey}';
 
-let filename1 = 'C:/Users/MyUserPath/Desktop/Replay OSR';
-let filename2 = 'C:/Users/MyUserPath/Desktop/replayfiles';
+let filename1 = 'C:/Users/{MyName}/Desktop/Replay OSR';
+let filename2 = 'C:/Users/{MyName}/Desktop/replayfiles';
 
 let currReplay = 0;
 let currReplayIndex = 0;
-
-let mods = {
-    "None": 0,
-    "NoFail": 1,
-    "Easy": 2,
-    "Hidden": 8,
-    "HardRock": 16,
-    "SuddenDeath": 32,
-    "DoubleTime": 64,
-    "HalfTime": 256,
-    "Nightcore": 576,
-}
-
-let currentMods = [];
-let modEnum;
 
 let getFiles = function(dir) {
     let results = [];
@@ -47,14 +32,14 @@ let getFiles = function(dir) {
     return dir = results;
 }
 
-let osrDirectory = getFiles(filename1);
-let mp4Directory = getFiles(filename2);
-
 let removeRegex = (filename) => {
     let indexOfLastPara = filename.lastIndexOf('(');
     let newStr = filename.substring(0, indexOfLastPara - 1);
     return newStr;
 }
+
+let osrDirectory = getFiles(filename1);
+let mp4Directory = getFiles(filename2);
 
 let renameFiles = () => {
     let count = 0;
@@ -65,7 +50,7 @@ let renameFiles = () => {
             console.log('File Renamed.'); 
         });
         const path = getFiles(filename1)[count];
-        fs.copyFile(path, 'C:/Users/Madara Uchiha/Desktop/completed/'+count+'.osr', (err) => {
+        fs.copyFile(path, 'C:/Users/{MyName}/Desktop/completed/'+count+'.osr', (err) => {
             if (err) throw err;
             console.log('source.txt was copied to destination.txt');
         });
@@ -93,6 +78,10 @@ let stopRecording = () => {
     robot.keyTap("escape");
 }
 
+function secondsToMs(input){
+    return input * 1000;
+}
+
 function msConversion(ms) {
     let sec = Math.floor(ms / 1000);
     let hrs = Math.floor(sec / 3600);
@@ -111,6 +100,22 @@ function msConversion(ms) {
       return min + ":" + sec;
     }
 }
+
+let mods = {
+    "None": 0,
+    "NoFail": 1,
+    "Easy": 2,
+    "Hidden": 8,
+    "HardRock": 16,
+    "SuddenDeath": 32,
+    "DoubleTime": 64,
+    "HalfTime": 256,
+    "Nightcore": 576,
+}
+
+
+let currentMods = [];
+let modEnum;
 
 let activeMods = (firstMod, secondMod, thirdMod) => {
     for(let [mod, value] of Object.entries(mods)) {
@@ -134,7 +139,6 @@ let activeMods = (firstMod, secondMod, thirdMod) => {
     return currentMods;
 };
 
-// Displays current mods active on song
 let checkMod = (number) => {
     let underChosenNumber = [];
     let largestArr = Math.max.apply(Math, underChosenNumber);
@@ -146,8 +150,10 @@ let checkMod = (number) => {
        number === 64  || number === 256 || 
        number === 512)  {number *= 2;}
 
+       console.log(number);
+
     Object.keys(mods).reduce(function(a, b){ 
-        if(mods[b] < number){
+        if(mods[b] <= number){
             modType = b;
             underChosenNumber.push(mods[b]);
         }
@@ -194,8 +200,8 @@ const getSongLength = async () => {
         let requestURL = `${apiPrefix}get_beatmaps?h=${hash}&k=${key}`;
         let returnData = await fetch(requestURL);
         actualReturnData = await returnData.json();
+        checkMod(replay.mods);
         modEnum = replay.mods;
-        checkMod(replay.mods); 
 
         function removeDuplicates(arrName){
             var noDuplicate = arrName.filter(function(elem, index, self) {
@@ -206,17 +212,18 @@ const getSongLength = async () => {
 
         console.log(replay.mods);
 
-        if(replay.mods === 0){
-            arr.push(actualReturnData[0].total_length * 1000);
+        if(replay.mods === 0 || replay.mods === 8 || replay.mods === 24 || replay.mods === 32
+        || replay.mods === 16){
+            arr.push(actualReturnData[0].total_length * 1000 + 5000);
         }
-        if(replay.mods === 8){
-            arr.push(actualReturnData[0].total_length * 1000);
+        else if(replay.mods < 64){
+            arr.push(actualReturnData[0].total_length * 1000 + 5000);
         }
-        if(replay.mods >= 64 && replay.mods <= 205 || replay.mods > 500 ){
-            arr.push(doubleTime(actualReturnData[0].total_length * 1000));
+        else if(replay.mods >= 64 && replay.mods <= 205 || replay.mods > 500 ){
+            arr.push(doubleTime(actualReturnData[0].total_length * 1000 + 5000));
         }
     }
-    console.log(`All Mods Used: ${removeDuplicates(modType)}`);
+    console.log(removeDuplicates(arr));
     return arr;
 };
 
@@ -233,7 +240,6 @@ const initializeReplay = () => {
             if(currReplay === osrDirectory.length){
                 robot.keyTap("numpad_9"); 
                 clearInterval(start);   
-                renameFiles();
             }
             console.log("Current Replay: " + currReplay);
             console.log("Song Length: " + msConversion(val[x]));
@@ -244,5 +250,5 @@ const initializeReplay = () => {
     .catch(err => console.log(err));
 }
 
-initializeReplay(); //Load next replay file
-startReplay(currReplay); // Begin recording replay files
+initializeReplay();
+startReplay(currReplay);
