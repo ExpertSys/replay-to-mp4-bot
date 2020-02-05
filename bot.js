@@ -150,8 +150,6 @@ let checkMod = (number) => {
        number === 64  || number === 256 || 
        number === 512)  {number *= 2;}
 
-       console.log(number);
-
     Object.keys(mods).reduce(function(a, b){ 
         if(mods[b] <= number){
             modType = b;
@@ -209,8 +207,6 @@ const getSongLength = async () => {
             });
             return noDuplicate;
         }
-
-        console.log(replay.mods);
 
         if(replay.mods === 0 || replay.mods === 8 || replay.mods === 24 || replay.mods === 32
         || replay.mods === 16){
