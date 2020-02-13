@@ -8,10 +8,10 @@ const osuReplayParser = require('osureplayparser');
 const osu = require('node-osu');
 
 let apiPrefix = "https://osu.ppy.sh/api/";
-let key = '{myKey}';
+let key = '{MyKey}';
 
-let filename1 = 'C:/Users/{MyName}/Desktop/Replay OSR';
-let filename2 = 'C:/Users/{MyName}/Desktop/replayfiles';
+let filename1 = 'C:/Users/{osrPath}';
+let filename2 = 'C:/Users/{mp4Path}';
 
 let currReplay = 0;
 let currReplayIndex = 0;
@@ -41,23 +41,6 @@ let removeRegex = (filename) => {
 let osrDirectory = getFiles(filename1);
 let mp4Directory = getFiles(filename2);
 
-let renameFiles = () => {
-    let count = 0;
-    for(let x = 0; x < osrDirectory.length; x++){
-        let newFileName = removeRegex(osrDirectory[x]);
-        fs.rename(mp4Directory[x], newFileName+'.mp4', function(err) {
-            if (err) throw err;
-            console.log('File Renamed.'); 
-        });
-        const path = getFiles(filename1)[count];
-        fs.copyFile(path, 'C:/Users/{MyName}/Desktop/completed/'+count+'.osr', (err) => {
-            if (err) throw err;
-            console.log('source.txt was copied to destination.txt');
-        });
-        count+=2;
-    }
-}
-
 let startReplay = (fileIndex) => {
     let filename = '"'+osrDirectory[fileIndex]+'"';
     shell.exec(filename);
@@ -67,15 +50,11 @@ let startReplay = (fileIndex) => {
 
 let startRecording = () => {
     robot.keyTap("numpad_8");
-    robot.moveMouse(1890, 1017);
-    robot.mouseClick();
-    robot.mouseClick();
+    robot.keyTap("numpad_5");
 }
 
 let stopRecording = () => {
     robot.keyTap("numpad_9");
-    robot.keyTap("escape");
-    robot.keyTap("escape");
 }
 
 function secondsToMs(input){
@@ -109,10 +88,10 @@ let mods = {
     "HardRock": 16,
     "SuddenDeath": 32,
     "DoubleTime": 64,
+    "Relax": 128,
     "HalfTime": 256,
     "Nightcore": 576,
 }
-
 
 let currentMods = [];
 let modEnum;
@@ -148,7 +127,10 @@ let checkMod = (number) => {
        number === 2   || number === 8   || 
        number === 16  || number === 32  || 
        number === 64  || number === 256 || 
-       number === 512)  {number *= 2;}
+       number === 512 || number === 128 )  
+       {number *= 2;}
+
+       console.log(number);
 
     Object.keys(mods).reduce(function(a, b){ 
         if(mods[b] <= number){
@@ -208,20 +190,33 @@ const getSongLength = async () => {
             return noDuplicate;
         }
 
+        console.log(replay.mods);
+
         if(replay.mods === 0 || replay.mods === 8 || replay.mods === 24 || replay.mods === 32
-        || replay.mods === 16){
-            arr.push(actualReturnData[0].total_length * 1000 + 5000);
+        || replay.mods === 16 || replay.mods === 128){
+            arr.push(actualReturnData[0].total_length * 1000 + 7000);
         }
         else if(replay.mods < 64){
-            arr.push(actualReturnData[0].total_length * 1000 + 5000);
+            arr.push(actualReturnData[0].total_length * 1000 + 7000);
         }
-        else if(replay.mods >= 64 && replay.mods <= 205 || replay.mods > 500 ){
-            arr.push(doubleTime(actualReturnData[0].total_length * 1000 + 5000));
+        else if(replay.mods >= 64 && replay.mods <= 127){
+            arr.push(doubleTime(actualReturnData[0].total_length * 1000 + 7000));
+        }
+        else if(replay.mods >= 128 && replay.mods <= 400){
+            arr.push(actualReturnData[0].total_length * 1000 + 7000);
+        }
+        else if(replay.mods >= 570 && replay.mods <= 700){
+            arr.push(doubleTime(actualReturnData[0].total_length * 1000 + 7000));
+      985  }
+        else{
+            arr.push(actualReturnData[0].total_length * 1000 + 7000);
         }
     }
     console.log(removeDuplicates(arr));
     return arr;
 };
+
+// getSongLength();
 
 const initializeReplay = () => {
     getSongLength().then(val => {
@@ -235,6 +230,11 @@ const initializeReplay = () => {
             
             if(currReplay === osrDirectory.length){
                 robot.keyTap("numpad_9"); 
+                robot.keyTap("numpad_6");
+                robot.keyTap("numpad_6");
+                shell.exec('"'+'C:/Users/Madara Uchiha/Desktop/renameBot.bat'+'"');
+                robot.keyTap("escape");
+                robot.keyTap("escape");
                 clearInterval(start);   
             }
             console.log("Current Replay: " + currReplay);
@@ -248,3 +248,4 @@ const initializeReplay = () => {
 
 initializeReplay();
 startReplay(currReplay);
+
