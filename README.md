@@ -1,3 +1,8 @@
+# THIS IS SAMPLE CODE
+
+The batch of code that is visible for this script is all sample code. The actual codebase is thousands of lines of code and I would
+like it to be kept private unless an employer requests to see it.
+
 # replay-to-mp4-bot
 Automatically takes a replay file from a game and converts it to a mp4 file
 
